@@ -34,16 +34,16 @@ class RankData:
         path = self.path
         if filename:
             path = filename
-        with open(path) as f:
-            try:
-                t: dict[str, str | dict[str, RankNode]] = json.load(f)
+        t: dict[str, str | dict[str, RankNode]]
+        try:
+            with open(path) as f:
+                t = json.load(f)
                 if t["date"] != datetime.datetime.now().strftime("%Y/%m/%d"):
                     raise ValueError("Out of date.")
-                self.rank = t
-            except Exception as e:
-                print(f"WARN: {e}, data cleared. ")
-                t = {"date": datetime.datetime.now().strftime("%Y/%m/%d")}
-                self.rank = t
+        except Exception as e:
+            print(f"WARN: {e}, data cleared. ")
+            t = {"date": datetime.datetime.now().strftime("%Y/%m/%d")}
+        self.rank = t
 
     def dump(self, filename: Path | None = None):
         path = self.path
