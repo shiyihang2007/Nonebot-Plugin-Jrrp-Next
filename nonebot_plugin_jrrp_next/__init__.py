@@ -1,20 +1,22 @@
-from nonebot.adapters.onebot.v11 import Bot, Message, GroupMessageEvent
-from nonebot.params import CommandArg
-from nonebot import CommandGroup, logger, get_plugin_config
-
-from .draw_rank import draw_rank
-
-from .utils import get_jrrp
-from .draw_img import draw_img
-
 import datetime
 import random
 
+from nonebot import CommandGroup, get_plugin_config, logger, require
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
+from nonebot.params import CommandArg
+
+from nonebot_plugin_jrrp_next.rank_data import RankData
 
 from .configs import Config
-
+from .draw_img import draw_img
+from .draw_rank import draw_rank
+from .utils import get_jrrp
 
 config = get_plugin_config(Config).jrrp_next
+
+require("nonebot_plugin_localstore")
+
+import nonebot_plugin_localstore as store  # noqa: E402
 
 
 async def is_enabled(event: GroupMessageEvent) -> bool:
@@ -32,7 +34,8 @@ RP_COMMAND_GROUP = CommandGroup("jrrp", rule=is_enabled)
 JRRP_COMMAND = RP_COMMAND_GROUP.command(tuple(), aliases={"今日人品", "rp"})
 RANK_COMMAND = RP_COMMAND_GROUP.command("rank", aliases={"人品排行", "rk"})
 
-rank_data: list[dict] = []
+rank_data_file = store.get_config_file("nonebot_plugin_jrrp_next", "ranks.json")
+rank_data: RankData = RankData(rank_data_file)
 
 
 @JRRP_COMMAND.handle()
@@ -41,6 +44,7 @@ async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
 
     args = arg.extract_plain_text().split()
     _jrrp: int = 0
+    group_id = event.group_id
 
     if len(args) == 0:
         user_id = event.user_id
@@ -60,10 +64,11 @@ async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
         logger.warning(f"Error at draw_img: {e}")
         image = "Bot出了点问题, 返回文字版:\n您今天的人品值是: " + str(_jrrp)
     # image = await draw_img(user_id, _jrrp, nickname, url, localtime)
-    rank_data.append({"rp": _jrrp, "user_id": user_id, "nickname": nickname})
+    rank_data.insert(str(group_id), (str(user_id), nickname, _jrrp))
     await JRRP_COMMAND.finish(image)
 
 
 @RANK_COMMAND.handle()
 async def _(bot: Bot, event: GroupMessageEvent):
-    await RANK_COMMAND.finish(await draw_rank(rank_data))
+    group_id = str(event.group_id)
+    await RANK_COMMAND.finish(await draw_rank(rank_data.load_rank(group_id)))
