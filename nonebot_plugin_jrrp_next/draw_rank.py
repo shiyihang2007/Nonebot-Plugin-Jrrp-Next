@@ -61,6 +61,7 @@ async def _draw_rank(
                 StaticPath.AlibabaPuHuiTi,
             ),
             color=(255, 255, 255, 255),
+            stroke_width=int(rank_height_m * 0.02),
         )
         image = draw_text(
             image,
