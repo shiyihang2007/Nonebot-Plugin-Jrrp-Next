@@ -55,6 +55,7 @@ class RankData:
     def load_rank(self, group_id: str) -> RankRecordsType:
         if group_id == "date":
             raise KeyError
+        self.load()
         return self.rank[group_id]
 
     def set_rank(self, obj: str | RankType):
