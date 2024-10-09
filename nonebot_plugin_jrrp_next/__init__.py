@@ -5,11 +5,10 @@ from nonebot import CommandGroup, get_plugin_config, logger, require
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
 from nonebot.params import CommandArg
 
-from nonebot_plugin_jrrp_next.rank_data import RankData
-
 from .configs import Config
 from .draw_img import draw_img
 from .draw_rank import draw_rank
+from .rank_data import RankData
 from .utils import get_jrrp
 
 config = get_plugin_config(Config).jrrp_next

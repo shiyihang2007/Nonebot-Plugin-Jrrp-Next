@@ -2,7 +2,7 @@ import asyncio
 from io import BytesIO
 
 from nonebot.adapters.onebot.v11 import MessageSegment
-from PIL import Image, ImageDraw
+from PIL import Image
 
 from .rank_data import RankNodeType, RankRecordsType
 from .resource_manager import StaticPath

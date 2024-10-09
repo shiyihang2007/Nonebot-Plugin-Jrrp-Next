@@ -9,7 +9,7 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from PIL import Image, ImageDraw, ImageFont
 
 from .resource_manager import StaticPath
-from .utils import DataText, draw_text, get_average_color, open_img, avatar_handler
+from .utils import DataText, avatar_handler, draw_text, get_average_color, open_img
 
 HITOKOTO_URL = "https://v1.hitokoto.cn/"
 HITOKOTO_TYPE = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]
