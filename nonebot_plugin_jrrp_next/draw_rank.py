@@ -34,7 +34,7 @@ async def _draw_rank(
         (0, 0, 0, 255),
     )
     i = 0
-    for user_id, it in data.items():
+    for it in sorted(data.values()):
         i += 1
         x = int(rank_height - rank_height_m * 0.8) // 2
         y = i * rank_height + (rank_height - rank_height_m) // 2
@@ -42,7 +42,9 @@ async def _draw_rank(
             "RGBA", (rank_width_m * it[RankNodeType.RP] // 100, rank_height_m), color
         )
         image.alpha_composite(tmp, (x, y))
-        avatar_img = await open_img(f"http://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640")
+        avatar_img = await open_img(
+            f"http://q1.qlogo.cn/g?b=qq&nk={it[RankNodeType.USER_ID]}&s=640"
+        )
         avatar_img = avatar_img.resize((rank_height_m, rank_height_m))
         avatar_img = avatar_handler(avatar_img)
         image.alpha_composite(
