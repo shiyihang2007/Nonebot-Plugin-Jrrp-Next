@@ -34,7 +34,7 @@ async def _draw_rank(
         (0, 0, 0, 255),
     )
     i = 0
-    for it in sorted(data.values()):
+    for it in sorted(data.values(), key=lambda x: x[RankNodeType.RP]):
         i += 1
         x = int(rank_height - rank_height_m * 0.8) // 2
         y = i * rank_height + (rank_height - rank_height_m) // 2
