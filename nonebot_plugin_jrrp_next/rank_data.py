@@ -49,7 +49,7 @@ class RankData:
         path = self.path
         if filename:
             path = filename
-        with open(path) as f:
+        with open(path, "w") as f:
             json.dump(self.rank, f)
 
     def load_rank(self, group_id: str) -> RankRecordsType:
