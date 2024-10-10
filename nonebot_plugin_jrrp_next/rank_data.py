@@ -69,6 +69,8 @@ class RankData:
     def insert(self, group_id: str, record: RankNode):
         if group_id == "date":
             raise KeyError
+        if self.rank["date"] != datetime.datetime.now().strftime("%Y/%m/%d"):
+            self.rank = {"date": datetime.datetime.now().strftime("%Y/%m/%d")}
         if group_id not in self.rank:
             self.rank[group_id] = {}
         self.rank[group_id][record[RankNodeType.USER_ID]] = record
