@@ -68,6 +68,21 @@ async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
 
 
 @RANK_COMMAND.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
     group_id = str(event.group_id)
-    await RANK_COMMAND.finish(await draw_rank(rank_data.load_rank(group_id)))
+    args = arg.extract_plain_text().split()
+
+    style: int = 0
+    color: tuple[int, int, int] = (0, 102, 204)
+    if len(args) >= 1:
+        style: int = int(args[0])
+    if len(args) >= 2:
+        color: tuple[int, int, int] = (
+            int(args[1][0:2], base=16),
+            int(args[1][2:4], base=16),
+            int(args[1][4:6], base=16),
+        )
+
+    await RANK_COMMAND.finish(
+        await draw_rank(rank_data.load_rank(group_id), style, color)
+    )
