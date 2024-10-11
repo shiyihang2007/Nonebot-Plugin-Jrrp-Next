@@ -50,7 +50,12 @@ async def _draw_rank(
         avatar_img = avatar_handler(avatar_img)
         image.alpha_composite(
             avatar_img,
-            (x + rank_width_m * it[RankNodeType.RP] // 100 + rank_avatar_size // 2, y),
+            (
+                x
+                + max(rank_width_m * it[RankNodeType.RP] // 100, rank_width_m // 20)
+                + rank_avatar_size // 2,
+                y,
+            ),
         )
         image = draw_text(
             image,
@@ -68,7 +73,9 @@ async def _draw_rank(
         image = draw_text(
             image,
             DataText(
-                x + rank_width_m * it[RankNodeType.RP] // 100 + rank_avatar_size * 1.8,
+                x
+                + max(rank_width_m * it[RankNodeType.RP] // 100, rank_width_m // 20)
+                + rank_avatar_size * 1.8,
                 y + (rank_height - rank_height_m * 0.8) // 2,
                 int(rank_height_m * 0.8),
                 it[RankNodeType.NICKNAME],
