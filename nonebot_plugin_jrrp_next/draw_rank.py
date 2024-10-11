@@ -150,6 +150,16 @@ async def _draw_rank_1(
     return image
 
 
+async def _draw_rank_2(
+    data: RankRecordsType,
+    color: tuple[int, int, int] = (0, 102, 204),
+) -> Image.Image:
+    image = Image.new(
+        "RGBA", (rank_width, rank_height * (len(data) + 1)), (255, 255, 255, 255)
+    )
+    return image
+
+
 async def draw_rank(
     data: RankRecordsType,
     style: int = 0,
