@@ -38,7 +38,8 @@ async def _draw_rank(
     for it in data:
         if it not in avatars:
             get_avatar_tasks.append(asyncio.Task(_get_avatar(it)))
-    await asyncio.wait(get_avatar_tasks)
+    if len(get_avatar_tasks) > 0:
+        await asyncio.wait(get_avatar_tasks)
     # draw rank
     image = Image.new(
         "RGBA", (rank_width, rank_height * (len(data) + 1)), (255, 255, 255, 255)
@@ -116,7 +117,8 @@ async def _draw_rank_1(
     for it in data:
         if it not in avatars:
             get_avatar_tasks.append(asyncio.Task(_get_avatar(it)))
-    await asyncio.wait(get_avatar_tasks)
+    if len(get_avatar_tasks) > 0:
+        await asyncio.wait(get_avatar_tasks)
     # draw rank
     image = Image.new(
         "RGBA", (rank_width, rank_height * (len(data) + 1)), (255, 255, 255, 255)
