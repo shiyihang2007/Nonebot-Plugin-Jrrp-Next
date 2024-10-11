@@ -127,23 +127,27 @@ async def draw_img(
     )
 
     # Get Hitokoto Message
-    hitokoto_result = await AsyncClient().get(
-        HITOKOTO_URL,
-        params={
-            "c": str(random.choice(HITOKOTO_TYPE)),
-            "encode": "json",
-            "min_length": 0,
-            "max_length": 100,
-        },
-    )
-    hitokoto_msg: str = hitokoto_result.json().get("hitokoto")
+    try:
+        hitokoto_result = await AsyncClient().get(
+            HITOKOTO_URL,
+            params={
+                "c": str(random.choice(HITOKOTO_TYPE)),
+                "encode": "json",
+                "min_length": 0,
+                "max_length": 100,
+            },
+        )
+        hitokoto_msg: str = hitokoto_result.json().get("hitokoto")
 
-    hitokoto_msg = hitokoto_msg.replace("。", ". ")
-    hitokoto_msg = hitokoto_msg.replace("，", ", ")
-    hitokoto_msg = hitokoto_msg.replace("；", "; ")
-    hitokoto_msg = hitokoto_msg.replace("“", '"')
-    hitokoto_msg = hitokoto_msg.replace("”", '"')
-    hitokoto_msg = hitokoto_msg.replace("、", ", ")
+        hitokoto_msg = hitokoto_msg.replace("。", ". ")
+        hitokoto_msg = hitokoto_msg.replace("，", ", ")
+        hitokoto_msg = hitokoto_msg.replace("；", "; ")
+        hitokoto_msg = hitokoto_msg.replace("“", '"')
+        hitokoto_msg = hitokoto_msg.replace("”", '"')
+        hitokoto_msg = hitokoto_msg.replace("、", ", ")
+
+    except Exception as e:
+        hitokoto_msg = f"发生了错误: {e}"
 
     hitokoto_msg_list = textwrap.wrap(
         hitokoto_msg, width=15, max_lines=9, break_long_words=True

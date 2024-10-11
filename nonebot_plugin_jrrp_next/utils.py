@@ -1,9 +1,10 @@
+import pathlib
 import random
 import time
 from io import BytesIO
 from typing import Tuple, Union
 
-from httpx import AsyncClient, Response
+from httpx import AsyncClient, ConnectError, Response
 from PIL import Image, ImageDraw, ImageFile, ImageFont
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -48,7 +49,7 @@ async def open_img(image_path: str, is_url: bool = True) -> Image.Image:
                 origin_data = await AsyncClient().get(image_path, follow_redirects=True)
                 return Image.open(BytesIO(origin_data.content)).convert("RGBA")
             except Exception as e:
-                print(f"Warn: {e}")
+                print(f"Warn: {e}, {type(e)}")
                 if origin_data:
                     print(
                         f"origin_data: {origin_data}, {origin_data.content}, {origin_data.headers}, {origin_data.url}"
@@ -115,6 +116,35 @@ def draw_text(
         anchor,
         stroke_width=stroke_width,
         stroke_fill=stroke_fill,
+    )
+
+
+def drawer_draw_shadowed_text(
+    draw: ImageDraw.ImageDraw,
+    pos: Tuple[float, float],
+    text: str,
+    font: pathlib.Path | str,
+    font_size: float,
+    shadow_size: float,
+    color: Tuple[int, int, int, int],
+    shadow_color: Tuple[int, int, int, int],
+    anchor: str,
+):
+    draw.text(
+        (pos[0] + shadow_size, pos[1] + shadow_size),
+        text,
+        font=ImageFont.truetype(font, font_size),
+        fill=shadow_color,
+        anchor=anchor,
+        stroke_width=int(shadow_size),
+        stroke_fill=shadow_color,
+    )
+    draw.text(
+        pos,
+        text,
+        font=ImageFont.truetype(font, font_size),
+        fill=color,
+        anchor=anchor,
     )
 
 
