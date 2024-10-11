@@ -2,18 +2,23 @@ import asyncio
 from io import BytesIO
 
 from nonebot.adapters.onebot.v11 import MessageSegment
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import json
 
-from .rank_data import RankNodeType, RankRecordsType
-from .resource_manager import StaticPath
-from .utils import DataText, avatar_handler, draw_text, open_img
+if __name__ == "__main__":
+    from rank_data import RankNodeType, RankRecordsType
+    from resource_manager import StaticPath
+    from utils import DataText, avatar_handler, draw_text, open_img
+else:
+    from .rank_data import RankNodeType, RankRecordsType
+    from .resource_manager import StaticPath
+    from .utils import DataText, avatar_handler, draw_text, open_img
 
-rank_width = 1920
-rank_width_m = 1000
-rank_height = 120
-rank_height_m = 100
-rank_avatar_size = 100
+rank_width_m = 728
+rank_height_m = int(rank_width_m * 0.1)
+rank_avatar_size = int(rank_height_m * 1.0)
+rank_width = int(rank_width_m * 2.2)
+rank_height = int(rank_height_m * 1.2)
 
 
 async def _draw_rank(
@@ -105,14 +110,15 @@ async def _draw_rank_1(
         (0, 0, 0, 255),
     )
     i = 0
+    draw = ImageDraw.Draw(image)
     for it in sorted(data.values(), key=lambda x: x[RankNodeType.RP], reverse=True):
         i += 1
         x = rank_height + int((rank_height - rank_height_m * 0.8) * 1.5)
         y = i * rank_height + (rank_height - rank_height_m) // 2
-        tmp = Image.new(
-            "RGBA", (rank_width_m * it[RankNodeType.RP] // 100, rank_height_m), color
+        draw.rectangle(
+            [x, y, x + rank_width_m * it[RankNodeType.RP] // 100, y + rank_height_m],
+            color,
         )
-        image.alpha_composite(tmp, (x, y))
         avatar_img = await open_img(
             f"http://q1.qlogo.cn/g?b=qq&nk={it[RankNodeType.USER_ID]}&s=640"
         )
@@ -122,30 +128,31 @@ async def _draw_rank_1(
             avatar_img,
             (x + rank_width_m * it[RankNodeType.RP] // 100 + rank_avatar_size // 2, y),
         )
-        image = draw_text(
-            image,
-            DataText(
+        draw.text(
+            (
                 x - (rank_height - rank_height_m * 0.8) // 2,
                 y + (rank_height - rank_height_m * 0.8) // 2,
-                int(rank_height_m * 0.8),
-                it[RankNodeType.RP],
-                StaticPath.AlibabaPuHuiTi,
-                "rt",
             ),
-            color=(255, 255, 255, 255),
+            str(it[RankNodeType.RP]),
+            font=ImageFont.truetype(
+                str(StaticPath.AlibabaPuHuiTi), int(rank_height_m * 0.8)
+            ),
+            fill=(255, 255, 255, 255),
+            anchor="rt",
             stroke_width=int(rank_height_m * 0.1),
             stroke_fill=color,
         )
-        image = draw_text(
-            image,
-            DataText(
+        draw.text(
+            (
                 x + rank_width_m * it[RankNodeType.RP] // 100 + rank_avatar_size * 1.8,
                 y + (rank_height - rank_height_m * 0.8) // 2,
-                int(rank_height_m * 0.8),
-                it[RankNodeType.NICKNAME],
-                StaticPath.AlibabaPuHuiTi,
             ),
-            color=(0, 0, 0, 255),
+            str(it[RankNodeType.NICKNAME]),
+            font=ImageFont.truetype(
+                str(StaticPath.AlibabaPuHuiTi), int(rank_height_m * 0.8)
+            ),
+            fill=(0, 0, 0, 255),
+            anchor="lt",
         )
     return image
 
