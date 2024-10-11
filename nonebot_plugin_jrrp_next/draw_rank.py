@@ -21,10 +21,25 @@ rank_width = int(rank_width_m * 2.2)
 rank_height = int(rank_height_m * 1.2)
 
 
+avatars: dict[str, Image.Image] = {}
+
+
+async def _get_avatar(user_id: str):
+    global avatars
+    avatars[user_id] = await open_img(f"http://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640")
+
+
 async def _draw_rank(
     data: RankRecordsType,
     color: tuple[int, int, int] = (0, 102, 204),
 ) -> Image.Image:
+    # get avatar_img
+    get_avatar_tasks: list = []
+    for it in data:
+        if it not in avatars:
+            get_avatar_tasks.append(asyncio.Task(_get_avatar(it)))
+    await asyncio.wait(get_avatar_tasks)
+    # draw rank
     image = Image.new(
         "RGBA", (rank_width, rank_height * (len(data) + 1)), (255, 255, 255, 255)
     )
@@ -49,9 +64,7 @@ async def _draw_rank(
             [x, y, x + rank_width_m * it[RankNodeType.RP] // 100, y + rank_height_m],
             color,
         )
-        avatar_img = await open_img(
-            f"http://q1.qlogo.cn/g?b=qq&nk={it[RankNodeType.USER_ID]}&s=640"
-        )
+        avatar_img = avatars[it[RankNodeType.USER_ID]]
         avatar_img = avatar_img.resize((rank_height_m, rank_height_m))
         avatar_img = avatar_handler(avatar_img)
         image.alpha_composite(
@@ -98,6 +111,13 @@ async def _draw_rank_1(
     data: RankRecordsType,
     color: tuple[int, int, int] = (0, 102, 204),
 ) -> Image.Image:
+    # get avatar_img
+    get_avatar_tasks: list = []
+    for it in data:
+        if it not in avatars:
+            get_avatar_tasks.append(asyncio.Task(_get_avatar(it)))
+    await asyncio.wait(get_avatar_tasks)
+    # draw rank
     image = Image.new(
         "RGBA", (rank_width, rank_height * (len(data) + 1)), (255, 255, 255, 255)
     )
@@ -122,9 +142,7 @@ async def _draw_rank_1(
             [x, y, x + rank_width_m * it[RankNodeType.RP] // 100, y + rank_height_m],
             color,
         )
-        avatar_img = await open_img(
-            f"http://q1.qlogo.cn/g?b=qq&nk={it[RankNodeType.USER_ID]}&s=640"
-        )
+        avatar_img = avatars[it[RankNodeType.USER_ID]]
         avatar_img = avatar_img.resize((rank_height_m, rank_height_m))
         avatar_img = avatar_handler(avatar_img)
         image.alpha_composite(
