@@ -39,15 +39,16 @@ async def _draw_rank(
         ),
         (0, 0, 0, 255),
     )
+    draw = ImageDraw.Draw(image)
     i = 0
     for it in sorted(data.values(), key=lambda x: x[RankNodeType.RP], reverse=True):
         i += 1
         x = int(rank_height - rank_height_m * 0.8) // 2
         y = i * rank_height + (rank_height - rank_height_m) // 2
-        tmp = Image.new(
-            "RGBA", (rank_width_m * it[RankNodeType.RP] // 100, rank_height_m), color
+        draw.rectangle(
+            [x, y, x + rank_width_m * it[RankNodeType.RP] // 100, y + rank_height_m],
+            color,
         )
-        image.alpha_composite(tmp, (x, y))
         avatar_img = await open_img(
             f"http://q1.qlogo.cn/g?b=qq&nk={it[RankNodeType.USER_ID]}&s=640"
         )
@@ -62,31 +63,33 @@ async def _draw_rank(
                 y,
             ),
         )
-        image = draw_text(
-            image,
-            DataText(
+        draw.text(
+            (
                 x + (rank_height - rank_height_m * 0.8) // 2,
                 y + (rank_height - rank_height_m * 0.8) // 2,
-                int(rank_height_m * 0.8),
-                it[RankNodeType.RP],
-                StaticPath.AlibabaPuHuiTi,
             ),
-            color=(255, 255, 255, 255),
-            stroke_width=int(rank_height_m * 0.02),
+            str(it[RankNodeType.RP]),
+            font=ImageFont.truetype(
+                str(StaticPath.AlibabaPuHuiTi), int(rank_height_m * 0.8)
+            ),
+            fill=(255, 255, 255, 255),
+            anchor="lt",
+            stroke_width=int(rank_height_m * 0.1),
             stroke_fill=color,
         )
-        image = draw_text(
-            image,
-            DataText(
+        draw.text(
+            (
                 x
                 + max(rank_width_m * it[RankNodeType.RP] // 100, rank_width_m // 20)
                 + rank_avatar_size * 1.8,
                 y + (rank_height - rank_height_m * 0.8) // 2,
-                int(rank_height_m * 0.8),
-                it[RankNodeType.NICKNAME],
-                StaticPath.AlibabaPuHuiTi,
             ),
-            color=(0, 0, 0, 255),
+            str(it[RankNodeType.NICKNAME]),
+            font=ImageFont.truetype(
+                str(StaticPath.AlibabaPuHuiTi), int(rank_height_m * 0.8)
+            ),
+            fill=(0, 0, 0, 255),
+            anchor="lt",
         )
     return image
 
@@ -109,8 +112,8 @@ async def _draw_rank_1(
         ),
         (0, 0, 0, 255),
     )
-    i = 0
     draw = ImageDraw.Draw(image)
+    i = 0
     for it in sorted(data.values(), key=lambda x: x[RankNodeType.RP], reverse=True):
         i += 1
         x = rank_height + int((rank_height - rank_height_m * 0.8) * 1.5)
