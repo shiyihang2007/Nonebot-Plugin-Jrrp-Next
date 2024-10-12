@@ -72,7 +72,7 @@ async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
     group_id = str(event.group_id)
     args = arg.extract_plain_text().split()
 
-    style: int = 1
+    style: int = 2
     color: tuple[int, int, int] = (0, 102, 204)
     if len(args) >= 1:
         style: int = int(args[0])
