@@ -2,6 +2,7 @@ import asyncio
 from io import BytesIO
 import random
 import math
+import sys
 
 from nonebot.adapters.onebot.v11 import MessageSegment
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
@@ -216,7 +217,6 @@ async def _draw_rank_2(
         color = (120, 200, 255)
 
     # config
-
     rank_shape_k = 0.5
 
     rank_title_width = 1333
@@ -228,7 +228,8 @@ async def _draw_rank_2(
     rank_li_height = 320
     rank_label_width = 400
     rank_label_font_size = 60
-    rank_item_size = 80
+    rank_item_size = 160
+    rank_li_item_font_size = 32
 
     rank_footer_height = 320
 
@@ -241,10 +242,18 @@ async def _draw_rank_2(
         + rank_footer_height * 1.5
     )
 
-    noise_count = 50
+    noise_count = rank_height // 50
     noise_size = rank_width // 10
     noise_size_range = 60
     noise_color_range = 30
+
+    # get avatar_img
+    get_avatar_tasks: list = []
+    for it in data:
+        if it not in avatars:
+            get_avatar_tasks.append(asyncio.Task(_get_avatar(it)))
+    if len(get_avatar_tasks) > 0:
+        await asyncio.wait(get_avatar_tasks)
 
     # draw image
     image = Image.new("RGBA", (rank_width, rank_height), (255, 255, 255, 255))
@@ -287,7 +296,9 @@ async def _draw_rank_2(
                 255 + random.randint(-noise_color_range, 0),
             ),
         )
-    image_background = image_background.filter(ImageFilter.BoxBlur(image.width * 0.1))
+    image_background = image_background.filter(
+        ImageFilter.GaussianBlur((image.width * 0.05, image.width * 0.1))
+    )
     image.alpha_composite(image_background)
 
     # draw title
@@ -340,12 +351,12 @@ async def _draw_rank_2(
     image_li = Image.new("RGBA", image.size, color=(0, 0, 0, 0))
     draw = ImageDraw.Draw(image_li)
     for i in range(math.ceil(len(data) / 6)):
-        ypos = rank_li_height * 1.5 * i + rank_title_height * 1.5
+        li_ypos = rank_li_height * 1.5 * i + rank_title_height * 1.5
         # label
         draw.rectangle(
             [
-                (0, ypos + rank_li_height * 0.8),
-                (rank_width, ypos + rank_li_height * 1.2),
+                (0, li_ypos + rank_li_height * 0.8),
+                (rank_width, li_ypos + rank_li_height * 1.2),
             ],
             (0, 0, 0, 32),
         )
@@ -354,14 +365,14 @@ async def _draw_rank_2(
             [
                 (
                     rank_label_width + rank_li_height * 1 * rank_shape_k,
-                    ypos + rank_li_height * 0.5,
+                    li_ypos + rank_li_height * 0.5,
                 ),
                 (
                     rank_width,
-                    ypos + rank_li_height * 0.5,
+                    li_ypos + rank_li_height * 0.5,
                 ),
-                (rank_width, ypos + rank_li_height * 1.5),
-                (rank_label_width, ypos + rank_li_height * 1.5),
+                (rank_width, li_ypos + rank_li_height * 1.5),
+                (rank_label_width, li_ypos + rank_li_height * 1.5),
             ],
             (0, 0, 0, 56),
         )
@@ -369,11 +380,11 @@ async def _draw_rank_2(
     image_li = Image.new("RGBA", image.size, color=(0, 0, 0, 0))
     draw = ImageDraw.Draw(image_li)
     for i in range(math.ceil(len(data) / 6)):
-        ypos = rank_li_height * 1.5 * i + rank_title_height * 1.5
+        li_ypos = rank_li_height * 1.5 * i + rank_title_height * 1.5
         # label text
         drawer_draw_shadowed_text(
             draw,
-            (rank_label_width * 0.2, ypos + rank_li_height * 1.0),
+            (rank_label_width * 0.2, li_ypos + rank_li_height * 1.0),
             f"Rank {i * 6 + 1}-{i * 6 + 6}",
             StaticPath.Aldrich,
             rank_label_font_size,
@@ -383,6 +394,185 @@ async def _draw_rank_2(
             "lm",
         )
     image.alpha_composite(image_li)
+
+    # draw li_item
+    image_li_item_mask = Image.new(
+        "L",
+        (rank_item_size + int(rank_item_size * rank_shape_k * 2), rank_item_size),
+        255,
+    )
+    draw = ImageDraw.Draw(image_li_item_mask)
+    draw.polygon(
+        [
+            (rank_item_size * rank_shape_k, 0),
+            (rank_item_size + rank_item_size * rank_shape_k * 2, 0),
+            (rank_item_size + rank_item_size * rank_shape_k, rank_item_size),
+            (0, rank_item_size),
+        ],
+        0,
+    )
+    image_li_item_shadow = Image.new(
+        "RGBA",
+        (
+            rank_item_size
+            + int(rank_item_size * rank_shape_k * 2)
+            + rank_shadow_size * 2,
+            rank_item_size + rank_shadow_size * 2,
+        ),
+        (0, 0, 0, 0),
+    )
+    draw = ImageDraw.Draw(image_li_item_shadow)
+    draw.polygon(
+        [
+            (rank_item_size * rank_shape_k, 0),
+            (
+                rank_item_size
+                + rank_item_size * rank_shape_k * 2
+                + rank_shadow_size * 2,
+                0,
+            ),
+            (
+                rank_item_size + rank_item_size * rank_shape_k + rank_shadow_size * 2,
+                rank_item_size + rank_shadow_size * 2,
+            ),
+            (0, rank_item_size + rank_shadow_size * 2),
+        ],
+        (0, 0, 0, 32),
+    )
+
+    image_li_item = Image.new("RGBA", image.size, color=(0, 0, 0, 0))
+    draw = ImageDraw.Draw(image_li_item)
+    data_view = sorted(data.values(), key=lambda x: x[RankNodeType.RP], reverse=True)
+    for i in range(math.ceil(len(data) / 6)):
+        li_ypos = (
+            rank_li_height * 1.5 * i + rank_li_height * 0.5 + rank_title_height * 1.5
+        )
+        for j in range(2):
+            item_ypos = li_ypos - rank_item_size * 0.2 + rank_item_size * 1.5 * j
+            for k in range(3):
+                item_xpos = (
+                    rank_label_width
+                    + rank_item_size * 0.6
+                    + k * (rank_item_size + rank_item_size * rank_shape_k * 2) * 1.2
+                )
+                id = i * 6 + j * 3 + k
+                if id >= len(data_view):
+                    break
+                it = data_view[id]
+                avatar = avatars[it[RankNodeType.USER_ID]]
+                # avatar = Image.new("RGBA", (1024, 1024), color)
+                avatar = avatar.resize(
+                    (
+                        int(avatar.width / (avatar.width / image_li_item_mask.width)),
+                        int(avatar.height / (avatar.width / image_li_item_mask.width)),
+                    ),
+                    Image.Resampling.LANCZOS,
+                )
+                avatar = avatar.crop(
+                    (
+                        0,
+                        (avatar.height - image_li_item_mask.height) // 2,
+                        image_li_item_mask.width,
+                        (avatar.height - image_li_item_mask.height) // 2
+                        + image_li_item_mask.height,
+                    )
+                )
+                avatar = Image.composite(
+                    Image.new("RGBA", image_li_item_mask.size),
+                    avatar,
+                    image_li_item_mask,
+                )
+                image_li_item.alpha_composite(
+                    image_li_item_shadow,
+                    list(
+                        map(
+                            int,
+                            [
+                                item_xpos + rank_shadow_size,
+                                item_ypos + rank_shadow_size,
+                            ],
+                        )
+                    ),
+                )
+                image_li_item.alpha_composite(
+                    avatar, list(map(int, [item_xpos, item_ypos]))
+                )
+                bg_color: tuple[int, int, int, int] = (
+                    (16, 16, 16, 255)
+                    if 90 <= int(it[RankNodeType.RP]) <= 100
+                    else (192, 96, 96, 255)
+                    if 60 <= int(it[RankNodeType.RP]) < 90
+                    else (16, 192, 192, 255)
+                    if 30 <= int(it[RankNodeType.RP]) < 60
+                    else (16, 192, 16, 255)
+                )
+                fg_color: tuple[int, int, int, int] = (
+                    (255, 255, 255, 255)
+                    if 90 <= int(it[RankNodeType.RP]) <= 100
+                    else (255, 255, 255, 255)
+                    if 60 <= int(it[RankNodeType.RP]) < 90
+                    else (255, 255, 255, 255)
+                    if 30 <= int(it[RankNodeType.RP]) < 60
+                    else (255, 255, 255, 255)
+                )
+                draw.rectangle(
+                    [
+                        (
+                            item_xpos
+                            + avatar.width
+                            - rank_li_item_font_size * 4.2
+                            + rank_shadow_size,
+                            item_ypos
+                            + avatar.height
+                            - rank_li_item_font_size * 1.5
+                            + rank_shadow_size,
+                        ),
+                        (
+                            item_xpos + avatar.width + rank_shadow_size * 3,
+                            item_ypos + avatar.height + rank_shadow_size * 3,
+                        ),
+                    ],
+                    fill=(0, 0, 0, 32),
+                )
+                draw.rectangle(
+                    [
+                        (
+                            item_xpos + avatar.width - rank_li_item_font_size * 4.2,
+                            item_ypos + avatar.height - rank_li_item_font_size * 1.5,
+                        ),
+                        (item_xpos + avatar.width, item_ypos + avatar.height),
+                    ],
+                    fill=bg_color,
+                )
+                drawer_draw_shadowed_text(
+                    draw,
+                    (
+                        item_xpos + avatar.width - rank_li_item_font_size * 3.8,
+                        item_ypos + avatar.height - rank_li_item_font_size * 0.3,
+                    ),
+                    "RP",
+                    StaticPath.Aldrich,
+                    rank_li_item_font_size,
+                    0,
+                    fg_color,
+                    (0, 0, 0, 0),
+                    "lb",
+                )
+                drawer_draw_shadowed_text(
+                    draw,
+                    (
+                        item_xpos + avatar.width - rank_li_item_font_size * 0.4,
+                        item_ypos + avatar.height - rank_li_item_font_size * 0.3,
+                    ),
+                    f"{it[RankNodeType.RP]}",
+                    StaticPath.Aldrich,
+                    rank_li_item_font_size,
+                    0,
+                    fg_color,
+                    (0, 0, 0, 0),
+                    "rb",
+                )
+    image.alpha_composite(image_li_item)
 
     return image
 
@@ -403,8 +593,15 @@ async def draw_rank(
 
 
 if __name__ == "__main__":
-    data = json.loads(input())
-    style = int(input())
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as f:
+            data = json.load(f)
+    else:
+        data = json.loads(input())
+    if len(sys.argv) > 2:
+        style = int(sys.argv[2])
+    else:
+        style = int(input())
 
     if style == 0:
         asyncio.run(_draw_rank(data)).convert("RGBA").save("tmp.png", "png")

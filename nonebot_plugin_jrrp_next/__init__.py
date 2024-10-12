@@ -33,13 +33,13 @@ RP_COMMAND_GROUP = CommandGroup("jrrp", rule=is_enabled)
 JRRP_COMMAND = RP_COMMAND_GROUP.command(tuple(), aliases={"今日人品", "rp"})
 RANK_COMMAND = RP_COMMAND_GROUP.command("rank", aliases={"人品排行", "rk"})
 
-rank_data_file = store.get_config_file("nonebot_plugin_jrrp_next", "ranks.json")
-rank_data: RankData = RankData(rank_data_file)
+rankDataFile = store.get_data_file("nonebot_plugin_jrrp_next", "ranks.json")
+rankData: RankData = RankData(rankDataFile)
 
 
 @JRRP_COMMAND.handle()
 async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
-    global rank_data
+    global rankData
 
     args = arg.extract_plain_text().split()
     _jrrp: int = 0
@@ -63,7 +63,7 @@ async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
         logger.warning(f"Error at draw_img: {e}")
         image = "Bot出了点问题, 返回文字版:\n您今天的人品值是: " + str(_jrrp)
     # image = await draw_img(user_id, _jrrp, nickname, url, localtime)
-    rank_data.insert(str(group_id), (str(user_id), nickname, _jrrp))
+    rankData.insert(str(group_id), (str(user_id), nickname, _jrrp))
     await JRRP_COMMAND.finish(image)
 
 
@@ -84,5 +84,5 @@ async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
         )
 
     await RANK_COMMAND.finish(
-        await draw_rank(rank_data.load_rank(group_id), style, color)
+        await draw_rank(rankData.load_rank(group_id), style, color)
     )
