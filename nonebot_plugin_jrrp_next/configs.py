@@ -7,8 +7,8 @@ from pydantic import BaseModel
 class ScopedConfig(BaseModel):
     command_priority: int = 10
 
-    groups_enabled: set[str] = set()
-    ban_user: set[str] = set()
+    groups_enabled: list[str] = []
+    ban_user: list[str] = []
 
     image_url_list: list[str] = [
         "https://t.alcy.cc/moe/",
@@ -41,15 +41,8 @@ class LocalConfig:
             with open(path) as f:
                 self.config: dict = json.load(f)
         except Exception as e:
-            print(f"warn: {e}, fallback to default config")
-            self.config = dict(
-                [
-                    (attr, getattr(default if default else ScopedConfig, attr))
-                    for attr in dir(ScopedConfig)
-                    if not attr.startswith("__")
-                    and not callable(getattr(ScopedConfig, attr))
-                ]
-            )
+            print(f"WARN: {e}, fallback to default config")
+            self.config = dict((default if default else ScopedConfig).__dict__.items())
             self.dump()
 
     def dump(self, filename: Path | str | None = None) -> None:
