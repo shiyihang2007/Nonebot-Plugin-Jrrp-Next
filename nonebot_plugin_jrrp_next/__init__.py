@@ -2,7 +2,7 @@ import datetime
 import random
 
 from nonebot import CommandGroup, get_plugin_config, logger, require
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
 from nonebot.params import CommandArg
 
 from .configs import Config, LocalConfig
@@ -153,4 +153,4 @@ async def _(bot: Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
         await FOOL_RP_COMMAND.finish(f"错误: {e}")
     config["fool_rp"][user_id] = rp
     rankDataFoolish.insert(group_id, (user_id, nickname, rp))
-    await FOOL_RP_COMMAND.finish(f"[CQ:at,qq={user_id}] 的 RP 已设为 {rp}")
+    await FOOL_RP_COMMAND.finish(MessageSegment.at(user_id) + f" 的 RP 已设为 {rp}")
