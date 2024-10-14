@@ -17,17 +17,16 @@ RankType = dict
 
 
 class RankData:
-    rank: RankType
     """
     {
-        "date": date, 
+        "date": date,
         group_id: {user_id: {rp, nickname}}
     }
     """
-    path: Path
 
-    def __init__(self, filename: Path) -> None:
-        self.path = filename
+    def __init__(self, filename: str | Path) -> None:
+        self.path: str | Path = filename
+        self.rank: RankType = {}
         self.load()
 
     def load(self, filename: Path | None = None):
@@ -45,8 +44,8 @@ class RankData:
             t = {"date": datetime.datetime.now().strftime("%Y/%m/%d")}
         self.rank = t
 
-    def dump(self, filename: Path | None = None):
-        path = self.path
+    def dump(self, filename: Path | str | None = None):
+        path: str | Path = self.path
         if filename:
             path = filename
         with open(path, "w") as f:
